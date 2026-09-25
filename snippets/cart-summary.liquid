@@ -18,7 +18,7 @@
           class="cart-totals__original-value cart-secondary-typography"
           data-testid="cart-subtotal-value"
         >
-          {{- cart.items_subtotal_price | money -}}
+          {%- render 'pk-price', amount: cart.items_subtotal_price -%}
         </span>
       </span>
       <ul
@@ -33,7 +33,7 @@
               {{ discount.title | escape }}
             </span>
             <span class="cart-discounts__value cart-secondary-typography"
-              >-{{ discount.total_allocated_amount | money -}}
+              >-{%- render 'pk-price', amount: discount.total_allocated_amount -%}
             </span>
           </li>
         {%- endfor -%}
@@ -219,13 +219,8 @@
     </div>
   {% endif %}
 
-  {%- liquid
-    if settings.currency_code_enabled_cart_total
-      assign total_price = cart.total_price | money_with_currency
-    else
-      assign total_price = cart.total_price | money
-    endif
-  -%}
+  {%- comment -%} Prabha Kala: ₹ with Indian digit grouping (pk-price) instead of the store money format. {%- endcomment -%}
+  {%- capture total_price -%}{%- render 'pk-price', amount: cart.total_price -%}{%- endcapture -%}
 
   <div class="cart-totals__container{% if settings.show_installments %} cart-totals__container--has-installments{% endif %}">
     <span

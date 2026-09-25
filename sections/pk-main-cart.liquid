@@ -1,0 +1,285 @@
+{%- comment -%}
+  Prabha Kala cart page (Phase 4D).
+
+  Everything comes from Shopify's cart object: lines, images, variant options, prices,
+  discounts and totals. The page is Shopify's native cart form:
+    - quantities post as updates[] to /cart (an "Update bag" button appears without JavaScript),
+    - Remove links are Shopify's item.url_to_remove,
+    - Checkout is the form's name="checkout" submit, which Shopify sends to its own checkout,
+    - the discount-code form (theme setting "show_add_discount_code") posts to /cart/update.
+  pk-cart.js enhances it with instant updates through Shopify's /cart/change.js and
+  /cart/update.js, dispatching Shopify's standard CartLinesUpdateEvent / CartDiscountUpdateEvent
+  (the same events the cart drawer and header bag count already listen to).
+{%- endcomment -%}
+
+{{ 'pk-cart.css' | asset_url | stylesheet_tag }}
+<script type="module" src="{{ 'pk-cart.js' | asset_url }}"></script>
+
+{%- liquid
+  assign form_id = 'PkCartForm-' | append: section.id
+  assign discount_form_id = 'PkDiscountForm-' | append: section.id
+
+  assign applied_codes = cart.cart_level_discount_applications | where: 'type', 'discount_code' | map: 'title'
+  for item in cart.items
+    for allocation in item.line_level_discount_allocations
+      if allocation.discount_application.type == 'discount_code'
+        assign applied_codes = applied_codes | concat: allocation.discount_application.title
+      endif
+    endfor
+  endfor
+  assign applied_codes = applied_codes | uniq
+-%}
+
+<pk-cart class="pk-cart" data-section-id="{{ section.id }}" data-testid="pk-cart">
+  <p class="pk-visually-hidden" role="status" aria-live="polite" data-pk-cart-status></p>
+
+  <div class="pk-container" data-pk-cart-body>
+    <header class="pk-cart__header">
+      {%- if section.settings.overline != blank -%}
+        <p class="pk-overline">{{ section.settings.overline | escape }}</p>
+      {%- endif -%}
+      <h1 class="pk-cart__title pk-heading" data-testid="cart-title">{{ section.settings.heading | escape }}</h1>
+      {%- if cart.item_count > 0 -%}
+        <p class="pk-cart__count" data-testid="cart-count-text">
+          {{ cart.item_count }} {% if cart.item_count == 1 %}item{% else %}items{% endif %}
+        </p>
+      {%- endif -%}
+      <div class="pk-collection__rule pk-cart__rule" aria-hidden="true"></div>
+    </header>
+
+    {%- if cart.item_count > 0 -%}
+      <form action="{{ routes.cart_url }}" method="post" id="{{ form_id }}" class="pk-cart__layout" novalidate data-pk-cart-form>
+        <div class="pk-cart__lines">
+          <ul class="pk-cart__list" aria-label="Items in your bag" data-testid="cart-lines">
+            {%- for item in cart.items -%}
+              {%- liquid
+                assign line = forloop.index
+                assign title = item.product.title | default: item.title
+                assign max_qty = ''
+                if item.variant.inventory_management == 'shopify' and item.variant.inventory_policy == 'deny'
+                  assign max_qty = item.variant.inventory_quantity
+                endif
+                assign fabric = item.product.metafields.custom.fabric.value
+                assign unit_compare = 0
+                if item.variant.compare_at_price > item.original_price
+                  assign unit_compare = item.variant.compare_at_price
+                elsif item.original_price > item.final_price
+                  assign unit_compare = item.original_price
+                endif
+              -%}
+              <li class="pk-line" data-line="{{ line }}" data-key="{{ item.key }}" data-testid="cart-line-{{ item.product.handle }}">
+                <a href="{{ item.url }}" class="pk-line__media pk-focus" tabindex="-1" aria-hidden="true">
+                  {%- if item.image -%}
+                    {%- assign image_alt = item.image.alt | default: title -%}
+                    {{- item.image | image_url: width: 360 | image_tag: widths: '120,180,240,360', sizes: '(min-width: 768px) 120px, 96px', loading: 'lazy', alt: image_alt, class: 'pk-line__image' -}}
+                  {%- endif -%}
+                </a>
+
+                <div class="pk-line__info">
+                  {%- if fabric != blank -%}
+                    <p class="pk-overline pk-line__fabric">{{ fabric | escape }}</p>
+                  {%- endif -%}
+                  <a href="{{ item.url }}" class="pk-line__title pk-heading pk-focus">{{ title | escape }}</a>
+
+                  {%- unless item.product.has_only_default_variant -%}
+                    <ul class="pk-line__options">
+                      {%- for option in item.options_with_values -%}
+                        <li>{{ option.name | escape }}: {{ option.value | escape }}</li>
+                      {%- endfor -%}
+                    </ul>
+                  {%- endunless -%}
+                  {%- if item.selling_plan_allocation -%}
+                    <p class="pk-line__meta">{{ item.selling_plan_allocation.selling_plan.name | escape }}</p>
+                  {%- endif -%}
+                  {%- for property in item.properties -%}
+                    {%- assign first_char = property.first | slice: 0 -%}
+                    {%- if property.last != blank and first_char != '_' -%}
+                      <p class="pk-line__meta">{{ property.first | escape }}: {{ property.last | escape }}</p>
+                    {%- endif -%}
+                  {%- endfor -%}
+
+                  <p class="pk-line__unit">
+                    <span class="pk-visually-hidden">Price</span>
+                    {%- render 'pk-price', amount: item.final_price -%}
+                    {%- if unit_compare > item.final_price -%}
+                      <s class="pk-line__compare"><span class="pk-visually-hidden">Regular price</span>{%- render 'pk-price', amount: unit_compare -%}</s>
+                    {%- endif -%}
+                  </p>
+                  {%- if item.line_level_discount_allocations.size > 0 -%}
+                    <ul class="pk-line__discounts">
+                      {%- for allocation in item.line_level_discount_allocations -%}
+                        <li>{{ allocation.discount_application.title | escape }} (−{% render 'pk-price', amount: allocation.amount %})</li>
+                      {%- endfor -%}
+                    </ul>
+                  {%- endif -%}
+
+                  <div class="pk-line__actions">
+                    <div class="pk-cqty pk-line__qty" data-pk-line-qty>
+                      <button
+                        type="button"
+                        class="pk-cqty__step pk-focus"
+                        data-pk-line-step="-1"
+                        aria-label="Decrease quantity of {{ title | escape }}"
+                        {% if item.quantity <= 1 %}disabled{% endif %}
+                      >
+                        <span aria-hidden="true">−</span>
+                      </button>
+                      <label class="pk-visually-hidden" for="PkQty-{{ section.id }}-{{ line }}">Quantity of {{ title | escape }}</label>
+                      <input
+                        type="number"
+                        class="pk-cqty__input"
+                        id="PkQty-{{ section.id }}-{{ line }}"
+                        name="updates[]"
+                        value="{{ item.quantity }}"
+                        min="1"
+                        {% if max_qty != '' %}max="{{ max_qty }}"{% endif %}
+                        step="1"
+                        inputmode="numeric"
+                        data-pk-line-input
+                        data-testid="cart-qty-{{ item.product.handle }}"
+                      >
+                      <button
+                        type="button"
+                        class="pk-cqty__step pk-focus"
+                        data-pk-line-step="1"
+                        aria-label="Increase quantity of {{ title | escape }}"
+                        {% if max_qty != '' and item.quantity >= max_qty %}disabled{% endif %}
+                      >
+                        <span aria-hidden="true">+</span>
+                      </button>
+                    </div>
+                    <a
+                      href="{{ item.url_to_remove }}"
+                      class="pk-line__remove pk-focus"
+                      data-pk-line-remove
+                      data-testid="cart-remove-{{ item.product.handle }}"
+                    >
+                      Remove<span class="pk-visually-hidden"> {{ title | escape }} from your bag</span>
+                    </a>
+                  </div>
+                  <p class="pk-line__error" role="alert" data-pk-line-error hidden></p>
+                </div>
+
+                <div class="pk-line__total" data-testid="cart-line-total-{{ item.product.handle }}">
+                  <span class="pk-visually-hidden">Line total</span>
+                  {%- render 'pk-price', amount: item.final_line_price -%}
+                </div>
+              </li>
+            {%- endfor -%}
+          </ul>
+
+          <div class="pk-cart__below">
+            <noscript>
+              <button type="submit" name="update" class="pk-button pk-button--secondary">Update bag</button>
+            </noscript>
+            <a href="{{ routes.all_products_collection_url }}" class="pk-cart__continue pk-focus">Continue shopping</a>
+          </div>
+        </div>
+
+        <aside class="pk-cart__summary" aria-labelledby="PkCartSummaryTitle-{{ section.id }}" data-testid="cart-summary">
+          <h2 class="pk-cart__summary-title pk-heading" id="PkCartSummaryTitle-{{ section.id }}">Order summary</h2>
+
+          <dl class="pk-cart__totals">
+            <div class="pk-cart__row">
+              <dt>Subtotal</dt>
+              <dd data-testid="cart-subtotal">{%- render 'pk-price', amount: cart.items_subtotal_price -%}</dd>
+            </div>
+            {%- for discount in cart.cart_level_discount_applications -%}
+              <div class="pk-cart__row pk-cart__row--discount">
+                <dt>{{ discount.title | escape }}</dt>
+                <dd>−{%- render 'pk-price', amount: discount.total_allocated_amount -%}</dd>
+              </div>
+            {%- endfor -%}
+            <div class="pk-cart__row pk-cart__row--total">
+              <dt>Total</dt>
+              <dd data-testid="cart-total">{%- render 'pk-price', amount: cart.total_price -%}</dd>
+            </div>
+          </dl>
+          {%- if section.settings.summary_note != blank -%}
+            <p class="pk-cart__note" data-testid="cart-summary-note">{{ section.settings.summary_note | escape }}</p>
+          {%- endif -%}
+
+          {%- if settings.show_add_discount_code -%}
+            <div class="pk-cart__discount" data-testid="cart-discount">
+              <label class="pk-overline pk-cart__discount-label" for="PkDiscount-{{ section.id }}">Discount code</label>
+              <div class="pk-cart__discount-row">
+                <input
+                  type="text"
+                  class="pk-cart__discount-input"
+                  id="PkDiscount-{{ section.id }}"
+                  name="discount"
+                  form="{{ discount_form_id }}"
+                  autocomplete="off"
+                  autocapitalize="characters"
+                  spellcheck="false"
+                  data-pk-discount-input
+                  data-testid="cart-discount-input"
+                >
+                <button type="submit" form="{{ discount_form_id }}" class="pk-button pk-button--secondary pk-cart__discount-apply" data-testid="cart-discount-apply">Apply</button>
+              </div>
+              <p class="pk-cart__discount-error" role="alert" data-pk-discount-error hidden></p>
+              {%- if applied_codes.size > 0 -%}
+                <ul class="pk-cart__codes" aria-label="Applied discount codes">
+                  {%- for code in applied_codes -%}
+                    <li class="pk-cart__code" data-pk-discount-code="{{ code | escape }}">
+                      <span>{{ code | escape }}</span>
+                      <button type="button" class="pk-cart__code-remove pk-focus" data-pk-discount-remove="{{ code | escape }}" aria-label="Remove discount code {{ code | escape }}">
+                        {%- render 'pk-icon', name: 'close' -%}
+                      </button>
+                    </li>
+                  {%- endfor -%}
+                </ul>
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+
+          <button type="submit" name="checkout" class="pk-button pk-button--primary pk-cart__checkout" data-testid="checkout-button">
+            Checkout
+          </button>
+          {%- if additional_checkout_buttons and settings.show_accelerated_checkout_buttons -%}
+            <div class="pk-cart__accelerated">{{ content_for_additional_checkout_buttons }}</div>
+          {%- endif -%}
+        </aside>
+      </form>
+
+      {%- if settings.show_add_discount_code -%}
+        {%- comment -%} Separate native form so the code field can live inside the summary (forms cannot nest). {%- endcomment -%}
+        <form action="{{ routes.cart_update_url }}" method="post" id="{{ discount_form_id }}" data-pk-discount-form hidden></form>
+      {%- endif -%}
+    {%- else -%}
+      <div class="pk-cart__empty" data-testid="cart-empty">
+        <p class="pk-heading pk-cart__empty-title">Your bag is empty</p>
+        <p class="pk-body">{{ section.settings.empty_text | escape }}</p>
+        <div class="pk-cart__empty-actions">
+          <a href="{{ routes.all_products_collection_url }}" class="pk-button pk-button--primary" data-testid="cart-empty-browse">Browse sarees</a>
+          <a href="{{ routes.all_products_collection_url }}?sort_by=created-descending" class="pk-button pk-button--secondary">New in</a>
+        </div>
+      </div>
+    {%- endif -%}
+  </div>
+</pk-cart>
+
+{% schema %}
+{
+  "name": "PK Cart",
+  "tag": "section",
+  "class": "pk-cart-section",
+  "settings": [
+    { "type": "text", "id": "overline", "label": "Overline", "default": "Your selection" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Your bag" },
+    {
+      "type": "text",
+      "id": "summary_note",
+      "label": "Note under the total",
+      "info": "Only state what checkout actually does.",
+      "default": "Inclusive of GST · ₹99 shipping across India, added at checkout."
+    },
+    {
+      "type": "text",
+      "id": "empty_text",
+      "label": "Empty bag text",
+      "default": "When you add a saree, it will wait for you here."
+    }
+  ]
+}
+{% endschema %}

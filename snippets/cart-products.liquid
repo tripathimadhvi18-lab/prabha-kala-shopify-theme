@@ -98,7 +98,7 @@
             role="caption"
           >
             {{ 'content.cart_total' | t }}
-            <span>{{ cart.total_price | money_with_currency }}</span>
+            <span>{%- render 'pk-price', amount: cart.total_price -%}</span>
           </caption>
 
           <thead
@@ -299,13 +299,13 @@
                     <div>
                       {% if item.original_price != item.final_price %}
                         <span class="visually-hidden">{{ 'content.price_sale' | t }}</span>
-                        <span>{{ item.final_price | money }}</span>
+                        <span>{%- render 'pk-price', amount: item.final_price -%}</span>
                         <span class="visually-hidden">{{ 'content.price_regular' | t }}</span>
                         <s class="compare-at-price">
                           {% if item.variant.compare_at_price > item.original_price %}
-                            {{ item.variant.compare_at_price | money }}
+                            {%- render 'pk-price', amount: item.variant.compare_at_price -%}
                           {% else %}
-                            {{ item.original_price | money }}
+                            {%- render 'pk-price', amount: item.original_price -%}
                           {% endif %}
                         </s>
                       {% else %}
@@ -315,11 +315,11 @@
                           <span class="visually-hidden">{{ 'content.price' | t }}</span>
                         {% endif %}
 
-                        <span>{{ item.original_price | money }}</span>
+                        <span>{%- render 'pk-price', amount: item.original_price -%}</span>
 
                         {% if item.variant.compare_at_price > item.original_price %}
                           <span class="visually-hidden">{{ 'content.price_regular' | t }}</span>
-                          <s class="compare-at-price">{{ item.variant.compare_at_price | money }}</s>
+                          <s class="compare-at-price">{%- render 'pk-price', amount: item.variant.compare_at_price -%}</s>
                         {% endif %}
                       {% endif %}
                     </div>
@@ -384,15 +384,9 @@
                     ></small>
                   </div>
                 </td>
-                {%- liquid
-                  if settings.currency_code_enabled_cart_items
-                    assign price = item.final_line_price | money_with_currency
-                    assign unit_price = item.unit_price | money_with_currency
-                  else
-                    assign price = item.final_line_price | money
-                    assign unit_price = item.unit_price | money
-                  endif
-                -%}
+                {%- comment -%} Prabha Kala: ₹ with Indian digit grouping (pk-price) instead of the store money format. {%- endcomment -%}
+                {%- capture price -%}{%- render 'pk-price', amount: item.final_line_price -%}{%- endcapture -%}
+                {%- capture unit_price -%}{%- render 'pk-price', amount: item.unit_price -%}{%- endcapture -%}
                 <td
                   class="cart-items__price cart-secondary-typography"
                   role="cell"
