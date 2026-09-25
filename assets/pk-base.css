@@ -1,0 +1,162 @@
+/*
+  Prabha Kala design foundation.
+  Tokens are copied from the production React storefront (frontend/src/index.css)
+  so the Shopify theme matches the current visual language.
+
+  Breakpoints (same as production Tailwind md / lg):
+    phone      < 768px
+    tablet     768px – 1023px   @media (min-width: 768px)
+    desktop    ≥ 1024px         @media (min-width: 1024px)
+  CSS custom properties cannot be used inside media queries, so the values
+  above are written literally wherever a breakpoint is needed.
+*/
+
+:root {
+  /* Brand palette */
+  --pk-ivory: #faf7f2;
+  --pk-ivory-subtle: #f4efe6;
+  --pk-white: #ffffff;
+  --pk-ink: #1a1a1a;
+  --pk-muted: #55524e;
+  --pk-soft: #8a8078;
+  --pk-maroon: #6b1d2f;
+  --pk-maroon-hover: #531422;
+  --pk-maroon-light: #f9ecef;
+  --pk-red: #9e2a2b;
+  --pk-indigo: #1c2d4a;
+  --pk-indigo-text: #cad4e2;
+  --pk-indigo-muted: #9fb0c9;
+  --pk-gold: #c59b27;
+  --pk-gold-soft: #dec67f;
+  --pk-gold-deep: #8a6400;
+  --pk-gold-light: #fdf8ea;
+  --pk-border: #e6dec8;
+
+  /* Type (families come from the theme's font settings: Playfair Display / DM Sans) */
+  --pk-font-heading: var(--font-heading--family, 'Playfair Display', Georgia, serif);
+  --pk-font-body: var(--font-body--family, 'DM Sans', system-ui, sans-serif);
+
+  /* Layout */
+  --pk-container: 80rem; /* 1280px, production max-w-7xl */
+  --pk-gutter: 1rem;     /* 16px phones */
+}
+
+@media (min-width: 640px) {
+  :root { --pk-gutter: 1.5rem; }
+}
+
+@media (min-width: 1024px) {
+  :root { --pk-gutter: 2rem; }
+}
+
+body {
+  background-color: var(--pk-ivory);
+  color: var(--pk-ink);
+  font-family: var(--pk-font-body);
+}
+
+.pk-container {
+  width: 100%;
+  max-width: var(--pk-container);
+  margin-inline: auto;
+  padding-inline: var(--pk-gutter);
+}
+
+/* Typography helpers */
+.pk-heading {
+  font-family: var(--pk-font-heading);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+}
+
+.pk-overline {
+  font-family: var(--pk-font-body);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--pk-gold-deep);
+}
+
+.pk-body {
+  font-size: 0.875rem;
+  line-height: 1.65;
+  color: var(--pk-muted);
+}
+
+@media (min-width: 768px) {
+  .pk-body { font-size: 1rem; }
+}
+
+/* Buttons: square, uppercase, tracked (production CTA language) */
+.pk-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 3rem;
+  min-width: 11.25rem;
+  padding: 0 1.75rem;
+  border: 1px solid transparent;
+  border-radius: 0;
+  font-family: var(--pk-font-body);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.pk-button--primary {
+  background: var(--pk-maroon);
+  color: var(--pk-ivory);
+}
+
+.pk-button--primary:hover {
+  background: var(--pk-maroon-hover);
+}
+
+.pk-button--secondary {
+  background: transparent;
+  color: var(--pk-maroon);
+  border-color: var(--pk-maroon);
+}
+
+.pk-button--secondary:hover {
+  background: var(--pk-maroon);
+  color: var(--pk-ivory);
+}
+
+/* Visible keyboard focus, matching the production storefront */
+.pk-focus:focus-visible,
+.pk-button:focus-visible {
+  outline: 2px solid var(--pk-maroon);
+  outline-offset: 2px;
+}
+
+.pk-on-dark .pk-focus:focus-visible,
+.pk-on-dark .pk-button:focus-visible {
+  outline-color: var(--pk-ivory);
+}
+
+.pk-visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.pk-icon {
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}

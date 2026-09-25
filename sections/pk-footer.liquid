@@ -1,0 +1,346 @@
+{%- comment -%}
+  Prabha Kala footer shell — reproduces the approved production footer (P2h-B):
+  real destinations and verified facts only; no contact details, newsletter or
+  policies that do not exist. Product pages have no footer (P2i), and the
+  homepage footer sits flush under the content (P2e).
+{%- endcomment -%}
+
+{%- liquid
+  assign hide_here = false
+  if section.settings.hide_on_product and template.name == 'product'
+    assign hide_here = true
+  endif
+  assign privacy = shop.privacy_policy
+  assign wishlist_page = section.settings.wishlist_page
+-%}
+
+{%- unless hide_here -%}
+  <footer
+    class="pk-footer pk-on-dark{% unless template.name == 'index' %} pk-footer--spaced{% endunless %}"
+    data-testid="pk-footer"
+  >
+    <div class="pk-container pk-footer__inner">
+      <div class="pk-footer__grid">
+        <div class="pk-footer__brand">
+          <p class="pk-footer__name pk-heading">{{ shop.name | escape }}</p>
+          {%- if section.settings.brand_line != blank -%}
+            <p class="pk-footer__line">{{ section.settings.brand_line | escape }}</p>
+          {%- endif -%}
+        </div>
+
+        <nav class="pk-footer__nav" aria-label="Footer">
+          <div>
+            <h2 class="pk-footer__heading pk-overline">{{ section.settings.shop_heading | escape }}</h2>
+            <ul class="pk-footer__list" role="list">
+              {%- for i in (1..3) -%}
+                {%- liquid
+                  assign label_key = 'shop_label_' | append: i
+                  assign link_key = 'shop_link_' | append: i
+                  assign label = section.settings[label_key]
+                  assign link = section.settings[link_key]
+                -%}
+                {%- if label != blank and link != blank -%}
+                  <li><a href="{{ link }}" class="pk-footer__link pk-focus">{{ label | escape }}</a></li>
+                {%- endif -%}
+              {%- endfor -%}
+            </ul>
+          </div>
+
+          <div>
+            <h2 class="pk-footer__heading pk-overline">{{ section.settings.bag_heading | escape }}</h2>
+            <ul class="pk-footer__list" role="list">
+              {%- if wishlist_page != blank -%}
+                <li><a href="{{ wishlist_page.url }}" class="pk-footer__link pk-focus">{{ wishlist_page.title | escape }}</a></li>
+              {%- endif -%}
+              <li>
+                <button
+                  type="button"
+                  class="pk-footer__link pk-focus"
+                  on:click="#cart-drawer/toggle"
+                  aria-haspopup="dialog"
+                  aria-controls="cart-drawer"
+                  data-testid="pk-footer-bag"
+                >
+                  {{- section.settings.bag_label | escape -}}
+                </button>
+              </li>
+              {%- if privacy != blank -%}
+                <li><a href="{{ privacy.url }}" class="pk-footer__link pk-focus">{{ privacy.title | escape }}</a></li>
+              {%- endif -%}
+            </ul>
+          </div>
+        </nav>
+      </div>
+
+      <div class="pk-footer__bottom">
+        <span>&copy; {{ 'now' | date: '%Y' }} {{ shop.name | escape }}</span>
+        {%- if section.settings.bottom_note != blank -%}
+          <span>{{ section.settings.bottom_note | escape }}</span>
+        {%- endif -%}
+      </div>
+    </div>
+  </footer>
+{%- endunless -%}
+
+{% stylesheet %}
+  .pk-footer {
+    background: var(--pk-indigo);
+    color: var(--pk-ivory);
+  }
+
+  .pk-footer--spaced {
+    margin-top: 5rem;
+  }
+
+  .pk-footer__inner {
+    padding-top: 2rem;
+    padding-bottom: 1.25rem;
+  }
+
+  .pk-footer__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1.5rem;
+    row-gap: 1.5rem;
+  }
+
+  .pk-footer__brand {
+    grid-column: span 2;
+    max-width: 24rem;
+  }
+
+  .pk-footer__name {
+    margin: 0;
+    font-size: 1.375rem;
+    line-height: 1.25;
+    color: var(--pk-ivory);
+  }
+
+  .pk-footer__line {
+    margin: 0.5rem 0 0;
+    font-size: 0.75rem;
+    line-height: 1.65;
+    color: var(--pk-indigo-text);
+  }
+
+  .pk-footer__nav {
+    grid-column: span 2;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1.5rem;
+  }
+
+  .pk-footer__heading {
+    margin: 0;
+    color: var(--pk-gold-soft);
+  }
+
+  .pk-footer__list {
+    margin: 0.25rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* 44px rows below 1024px so every link is an adequate tap target */
+  .pk-footer__link {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: var(--pk-font-body);
+    font-size: 0.875rem;
+    text-align: left;
+    text-decoration: none;
+    color: var(--pk-indigo-text);
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .pk-footer__link:hover {
+    color: var(--pk-white);
+  }
+
+  .pk-footer__bottom {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    column-gap: 1rem;
+    row-gap: 0.25rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgb(255 255 255 / 0.15);
+    font-size: 0.75rem;
+    color: var(--pk-indigo-muted);
+  }
+
+  @media (min-width: 768px) {
+    .pk-footer__inner {
+      padding-block: 2.5rem;
+    }
+
+    .pk-footer__grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: 2rem;
+    }
+
+    .pk-footer__line {
+      margin-top: 0.75rem;
+      font-size: 0.875rem;
+    }
+
+    .pk-footer__name {
+      font-size: 1.5rem;
+    }
+
+    .pk-footer__nav {
+      column-gap: 2rem;
+    }
+
+    .pk-footer__list {
+      margin-top: 0.5rem;
+    }
+
+    .pk-footer__bottom {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .pk-footer__inner {
+      padding-block: 3.5rem;
+    }
+
+    .pk-footer__grid {
+      column-gap: 2.5rem;
+    }
+
+    .pk-footer__nav {
+      column-gap: 2.5rem;
+    }
+
+    .pk-footer__list {
+      margin-top: 0.75rem;
+    }
+
+    .pk-footer__link {
+      min-height: 0;
+      padding-block: 0.25rem;
+    }
+
+    .pk-footer__bottom {
+      margin-top: 2.5rem;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PK footer",
+  "class": "pk-footer-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "brand_line",
+      "label": "Line under the brand name",
+      "default": "All prices include GST · ₹99 shipping across India"
+    },
+    {
+      "type": "header",
+      "content": "Shop column"
+    },
+    {
+      "type": "text",
+      "id": "shop_heading",
+      "label": "Heading",
+      "default": "Shop"
+    },
+    {
+      "type": "text",
+      "id": "shop_label_1",
+      "label": "Link 1 label",
+      "default": "All sarees"
+    },
+    {
+      "type": "url",
+      "id": "shop_link_1",
+      "label": "Link 1"
+    },
+    {
+      "type": "text",
+      "id": "shop_label_2",
+      "label": "Link 2 label",
+      "default": "New arrivals"
+    },
+    {
+      "type": "url",
+      "id": "shop_link_2",
+      "label": "Link 2"
+    },
+    {
+      "type": "text",
+      "id": "shop_label_3",
+      "label": "Link 3 label",
+      "default": "Search"
+    },
+    {
+      "type": "url",
+      "id": "shop_link_3",
+      "label": "Link 3"
+    },
+    {
+      "type": "header",
+      "content": "Your bag column"
+    },
+    {
+      "type": "text",
+      "id": "bag_heading",
+      "label": "Heading",
+      "default": "Your bag"
+    },
+    {
+      "type": "page",
+      "id": "wishlist_page",
+      "label": "Wishlist page (link shows only when set)"
+    },
+    {
+      "type": "text",
+      "id": "bag_label",
+      "label": "Bag link label (opens the cart drawer)",
+      "default": "Your bag"
+    },
+    {
+      "type": "paragraph",
+      "content": "The privacy policy link appears automatically when a privacy policy exists in Shopify."
+    },
+    {
+      "type": "header",
+      "content": "Bottom bar"
+    },
+    {
+      "type": "text",
+      "id": "bottom_note",
+      "label": "Note",
+      "default": "All prices are inclusive of GST"
+    },
+    {
+      "type": "checkbox",
+      "id": "hide_on_product",
+      "label": "Hide on product pages",
+      "default": true
+    }
+  ],
+  "enabled_on": {
+    "groups": ["footer"]
+  },
+  "presets": [
+    {
+      "name": "PK footer"
+    }
+  ]
+}
+{% endschema %}

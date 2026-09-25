@@ -1,0 +1,118 @@
+{%- doc -%}
+  Prabha Kala product card — port of the production React ProductCard, using
+  native Shopify product/variant data (no derived catalogue attributes).
+
+  @param {object} product - Shopify product
+  @param {boolean} [eager] - load the image eagerly (above the fold)
+{%- enddoc -%}
+{%- liquid
+  assign variant = product.selected_or_first_available_variant
+  assign price = variant.price
+  assign compare = variant.compare_at_price | default: 0
+  assign discount_pct = 0
+  if compare > price
+    assign discount_pct = compare | minus: price | times: 100.0 | divided_by: compare | round
+  endif
+
+  assign badges = ''
+  assign now_s = 'now' | date: '%s' | plus: 0
+  assign created_s = product.created_at | date: '%s' | plus: 0
+  assign age_days = now_s | minus: created_s | divided_by: 86400
+  if age_days < 45
+    assign badges = badges | append: 'New,'
+  endif
+  if product.metafields.custom.handloom.value == true
+    assign badges = badges | append: 'Handloom,'
+  endif
+  for tag in product.tags
+    assign t = tag | downcase
+    if t == 'bestseller' or t == 'best seller'
+      assign badges = badges | append: 'Bestseller,'
+      break
+    endif
+  endfor
+  assign badge_list = badges | split: ','
+
+  assign stock = 0
+  if variant.available
+    if variant.inventory_management == 'shopify' and variant.inventory_quantity > 0
+      assign stock = variant.inventory_quantity
+    else
+      assign stock = 99
+    endif
+  endif
+
+  assign first_image = product.media[0].preview_image | default: product.featured_image
+  assign second_image = product.media[1].preview_image
+  if eager
+    assign loading = 'eager'
+  else
+    assign loading = 'lazy'
+  endif
+  assign sizes = '(min-width: 1024px) 20vw, 50vw'
+-%}
+
+<article class="pk-card" data-testid="product-card-{{ product.handle }}">
+  <div class="pk-card__media">
+    <a href="{{ product.url }}" class="pk-card__image-link" data-testid="product-link-{{ product.handle }}" tabindex="-1" aria-hidden="true">
+      {%- if first_image -%}
+        {{- first_image | image_url: width: 900 | image_tag: widths: '300,450,600,900', sizes: sizes, loading: loading, class: 'pk-card__image', alt: product.title -}}
+      {%- endif -%}
+      {%- if second_image -%}
+        {{- second_image | image_url: width: 900 | image_tag: widths: '300,450,600,900', sizes: sizes, loading: 'lazy', class: 'pk-card__image pk-card__image--second', alt: '' -}}
+      {%- endif -%}
+    </a>
+
+    <div class="pk-card__badges">
+      {%- for badge in badge_list limit: 2 -%}
+        {%- if badge != blank -%}
+          <span class="pk-card__badge pk-card__badge--{{ badge | handle }}">{{ badge }}</span>
+        {%- endif -%}
+      {%- endfor -%}
+      {%- if discount_pct > 0 -%}
+        <span class="pk-card__badge pk-card__badge--discount">{{ discount_pct }}% off</span>
+      {%- endif -%}
+    </div>
+
+    <button
+      type="button"
+      class="pk-card__wish pk-focus"
+      data-pk-wishlist="{{ product.handle }}"
+      aria-pressed="false"
+      aria-label="Save to wishlist"
+      data-testid="wishlist-toggle-{{ product.handle }}"
+    >
+      {%- render 'pk-icon', name: 'heart', class: 'pk-card__heart' -%}
+    </button>
+
+    {%- if stock > 0 and stock <= 3 -%}
+      <span class="pk-card__low-stock" data-testid="low-stock-{{ product.handle }}">Only {{ stock }} left</span>
+    {%- endif -%}
+  </div>
+
+  <div class="pk-card__body">
+    {%- assign fabric = product.metafields.custom.fabric.value -%}
+    {%- if fabric != blank -%}
+      <p class="pk-card__fabric pk-overline">{{ fabric | escape }}</p>
+    {%- endif -%}
+    <a href="{{ product.url }}" class="pk-card__title-link pk-focus">
+      <h3 class="pk-card__title pk-heading">{{ product.title | escape }}</h3>
+    </a>
+    <div class="pk-card__prices">
+      <span class="pk-card__price" data-testid="price-{{ product.handle }}">{%- render 'pk-price', amount: price -%}</span>
+      {%- if compare > price -%}
+        <span class="pk-card__compare"><span class="pk-visually-hidden">Regular price </span>{%- render 'pk-price', amount: compare -%}</span>
+      {%- endif -%}
+    </div>
+    <pk-add-to-bag data-variant-id="{{ variant.id }}" data-product-id="{{ product.id }}">
+      <button
+        type="button"
+        class="pk-card__add pk-focus"
+        data-testid="add-to-cart-btn-{{ product.handle }}"
+        {% unless variant.available %}disabled{% endunless %}
+      >
+        {%- if variant.available -%}Add to bag{%- else -%}Sold out{%- endif -%}
+      </button>
+    </pk-add-to-bag>
+  </div>
+</article>

@@ -1,15 +1,26 @@
-/*
- * ------------------------------------------------------------
- * IMPORTANT: The contents of this file are auto-generated.
- *
- * This file may be updated by the Shopify admin theme editor
- * or related systems. Please exercise caution as any changes
- * made to this file may be overwritten.
- * ------------------------------------------------------------
- */
 {
   "type": "footer",
   "name": "t:names.footer",
-  "sections": {},
-  "order": []
+  "sections": {
+    "pk_footer": {
+      "type": "pk-footer",
+      "settings": {
+        "brand_line": "All prices include GST · ₹99 shipping across India",
+        "shop_heading": "Shop",
+        "shop_label_1": "All sarees",
+        "shop_link_1": "shopify://collections/all",
+        "shop_label_2": "New arrivals",
+        "shop_link_2": "/collections/all?sort_by=created-descending",
+        "shop_label_3": "Search",
+        "shop_link_3": "/search",
+        "bag_heading": "Your bag",
+        "bag_label": "Your bag",
+        "bottom_note": "All prices are inclusive of GST",
+        "hide_on_product": true
+      }
+    }
+  },
+  "order": [
+    "pk_footer"
+  ]
 }

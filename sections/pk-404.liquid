@@ -1,0 +1,51 @@
+{%- comment -%}
+  Prabha Kala not-found page (same pattern as the production "could not find" state).
+{%- endcomment -%}
+
+<section class="pk-404" data-testid="pk-404">
+  <div class="pk-container pk-404__inner">
+    <p class="pk-overline">{{ section.settings.overline | escape }}</p>
+    <h1 class="pk-404__title pk-heading">{{ section.settings.heading | escape }}</h1>
+    {%- if section.settings.text != blank -%}
+      <p class="pk-404__text pk-body">{{ section.settings.text | escape }}</p>
+    {%- endif -%}
+    <a href="{{ routes.all_products_collection_url }}" class="pk-button pk-button--primary pk-404__cta">
+      {{- section.settings.button_label | escape -}}
+    </a>
+  </div>
+</section>
+
+{% stylesheet %}
+  .pk-404__inner {
+    max-width: 48rem;
+    padding-block: 6rem;
+    text-align: center;
+  }
+
+  .pk-404__title {
+    margin: 0.75rem 0 0;
+    font-size: 1.875rem;
+    color: var(--pk-ink);
+  }
+
+  .pk-404__text {
+    margin: 0.75rem auto 0;
+  }
+
+  .pk-404__cta {
+    margin-top: 1.5rem;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PK not found",
+  "settings": [
+    { "type": "text", "id": "overline", "label": "Overline", "default": "Page not found" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "We could not find that page" },
+    { "type": "textarea", "id": "text", "label": "Text", "default": "It may have moved. Browse the full collection instead." },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Browse sarees" }
+  ],
+  "presets": [{ "name": "PK not found" }]
+}
+{% endschema %}

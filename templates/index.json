@@ -1,190 +1,70 @@
-/*
- * ------------------------------------------------------------
- * IMPORTANT: The contents of this file are auto-generated.
- *
- * This file may be updated by the Shopify admin theme editor
- * or related systems. Please exercise caution as any changes
- * made to this file may be overwritten.
- * ------------------------------------------------------------
- */
 {
   "sections": {
-    "product_list_fa6P9H": {
-      "type": "product-list",
+    "pk_hero": {
+      "type": "pk-hero",
       "blocks": {
-        "static-header": {
-          "type": "_product-list-content",
-          "name": "t:names.header",
-          "static": true,
+        "fallback_1": {
+          "type": "fallback_slide",
           "settings": {
-            "content_direction": "row",
-            "vertical_on_mobile": false,
-            "horizontal_alignment": "space-between",
-            "vertical_alignment": "flex-end",
-            "align_baseline": true,
-            "horizontal_alignment_flex_direction_column": "flex-start",
-            "vertical_alignment_flex_direction_column": "center",
-            "gap": 12,
-            "width": "fill",
-            "custom_width": 100,
-            "width_mobile": "fill",
-            "custom_width_mobile": 100,
-            "height": "fit",
-            "custom_height": 100,
-            "background_media": "none",
-            "background_color": "",
-            "video_position": "cover",
-            "background_image_position": "cover",
-            "border": "none",
-            "border_width": 1,
-            "border_opacity": 100,
-            "border_color": "",
-            "border_radius": 0,
-            "padding-block-start": 0,
-            "padding-block-end": 0,
-            "padding-inline-start": 0,
-            "padding-inline-end": 0
-          },
-          "blocks": {
-            "product_list_button_MWeP9V": {
-              "type": "_product-list-button",
-              "name": "t:names.product_list_button",
-              "settings": {
-                "label": "View all",
-                "open_in_new_tab": false,
-                "style_class": "link",
-                "custom_button_background": "{{ settings.color_palette.foreground }}",
-                "custom_button_text": "{{ settings.color_palette.background }}",
-                "custom_button_border": "{{ settings.color_palette.background }}",
-                "link_text_color": "",
-                "width": "fit-content",
-                "custom_width": 100,
-                "width_mobile": "fit-content",
-                "custom_width_mobile": 100
-              },
-              "blocks": {}
-            }
-          },
-          "block_order": [
-            "product_list_button_MWeP9V"
-          ]
+            "image_url": "https://images.unsplash.com/photo-1727430228383-aa1fb59db8bf?crop=entropy&cs=srgb&fm=jpg&w=1800&q=80",
+            "mobile_position": "62% 75%",
+            "tablet_position": "50% 30%",
+            "desktop_position": "50% 30%",
+            "overline": "The Festive Loom Edit",
+            "title": "Kanjeevaram & Banarasi, woven for the occasions you remember",
+            "body": "Pure mulberry silk, tested zari, and a weaver's name on every drape.",
+            "cta_label": "Explore festive silks",
+            "cta_url": "/collections/all?occasion=Wedding"
+          }
         },
-        "static-product-card": {
-          "type": "_product-card",
-          "name": "t:names.product_card",
-          "disabled": true,
-          "static": true,
+        "fallback_2": {
+          "type": "fallback_slide",
           "settings": {
-            "product_card_gap": 4,
-            "background_color": "",
-            "border": "none",
-            "border_width": 1,
-            "border_opacity": 100,
-            "border_color": "",
-            "border_radius": 0,
-            "padding-block-start": 0,
-            "padding-block-end": 0,
-            "padding-inline-start": 0,
-            "padding-inline-end": 0
-          },
-          "blocks": {
-            "product_card_gallery_677WP3": {
-              "type": "_product-card-gallery",
-              "name": "t:names.product_card_media",
-              "settings": {
-                "image_ratio": "adapt",
-                "border": "none",
-                "border_width": 1,
-                "border_opacity": 100,
-                "border_color": "",
-                "border_radius": 0,
-                "padding-block-start": 0,
-                "padding-block-end": 0,
-                "padding-inline-start": 0,
-                "padding-inline-end": 0
-              },
-              "blocks": {}
-            },
-            "product_title_YXxMTj": {
-              "type": "product-title",
-              "name": "t:names.product_title",
-              "settings": {
-                "width": "100%",
-                "max_width": "normal",
-                "alignment": "left",
-                "type_preset": "rte",
-                "font": "var(--font-body--family)",
-                "font_size": "1rem",
-                "line_height": "normal",
-                "letter_spacing": "normal",
-                "case": "none",
-                "wrap": "pretty",
-                "text_color": "",
-                "background": false,
-                "background_color": "#00000026",
-                "corner_radius": 0,
-                "padding-block-start": 4,
-                "padding-block-end": 0,
-                "padding-inline-start": 0,
-                "padding-inline-end": 0
-              },
-              "blocks": {}
-            },
-            "price_JQzVV4": {
-              "type": "price",
-              "name": "t:names.product_price",
-              "settings": {
-                "show_sale_price_first": true,
-                "show_installments": false,
-                "show_tax_info": false,
-                "type_preset": "h6",
-                "width": "100%",
-                "alignment": "left",
-                "font": "var(--font-body--family)",
-                "font_size": "1rem",
-                "line_height": "normal",
-                "letter_spacing": "normal",
-                "case": "none",
-                "text_color": "",
-                "padding-block-start": 0,
-                "padding-block-end": 0,
-                "padding-inline-start": 0,
-                "padding-inline-end": 0
-              },
-              "blocks": {}
-            }
-          },
-          "block_order": [
-            "product_card_gallery_677WP3",
-            "product_title_YXxMTj",
-            "price_JQzVV4"
-          ]
+            "image_url": "https://images.unsplash.com/photo-1678705730064-a7ecbab4b3fb?crop=entropy&cs=srgb&fm=jpg&w=1800&q=80",
+            "mobile_position": "42% 25%",
+            "tablet_position": "",
+            "desktop_position": "50% 22%",
+            "overline": "Everyday Handloom",
+            "title": "Chanderi and handspun cotton, light enough to forget you're wearing it",
+            "body": "Feather-light drapes for long work days and unhurried mornings.",
+            "cta_label": "Shop Chanderi & cotton",
+            "cta_url": "/collections/all?fabric=Chanderi"
+          }
+        },
+        "fallback_3": {
+          "type": "fallback_slide",
+          "settings": {
+            "image_url": "https://images.unsplash.com/photo-1614940685083-c5409b57da6e?crop=entropy&cs=srgb&fm=jpg&w=1800&q=80",
+            "mobile_position": "72% 30%",
+            "tablet_position": "",
+            "desktop_position": "50% 28%",
+            "overline": "Craft Clusters",
+            "title": "Bandhani from Bhuj. Ajrakh from Kutch. Dyed the slow way.",
+            "body": "Sixteen stages, madder root and indigo, no shortcuts.",
+            "cta_label": "Shop the craft edit",
+            "cta_url": "/collections/all?craft=Ajrakh"
+          }
         }
       },
-      "disabled": true,
-      "name": "t:names.product_list",
+      "block_order": [
+        "fallback_1",
+        "fallback_2",
+        "fallback_3"
+      ],
+      "settings": {}
+    },
+    "pk_current_edit": {
+      "type": "pk-current-edit",
       "settings": {
-        "collection": "all",
-        "layout_type": "grid",
-        "carousel_on_mobile": false,
-        "max_products": 8,
-        "columns": 4,
-        "mobile_columns": "2",
-        "mobile_card_size": "60cqw",
-        "columns_gap": 8,
-        "rows_gap": 24,
-        "icons_style": "arrow",
-        "icons_shape": "none",
-        "section_width": "page-width",
-        "horizontal_alignment": "flex-start",
-        "gap": 28,
-        "background_color": "{{ settings.color_palette.background }}",
-        "padding-block-start": 48,
-        "padding-block-end": 48
+        "overline": "The collection",
+        "heading": "Current Edit",
+        "product_count": 10,
+        "link_label": "View all"
       }
     }
   },
   "order": [
-    "product_list_fa6P9H"
+    "pk_hero",
+    "pk_current_edit"
   ]
 }

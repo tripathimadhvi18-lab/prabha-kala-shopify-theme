@@ -1,0 +1,94 @@
+{%- doc -%}
+  One Prabha Kala hero slide: either its picture ('media') or its text ('content').
+  Used for Shopify-managed slides (hero_slide metaobject) and the built-in fallback slides.
+
+  @param {string} part - 'media' | 'content'
+  @param {string} [image] - desktop image URL (also used below 768px when there is no mobile image)
+  @param {number} [width] - intrinsic image width
+  @param {number} [height] - intrinsic image height
+  @param {string} [srcset] - desktop srcset
+  @param {string} [mobile_image] - mobile image URL (below 768px)
+  @param {string} [mobile_srcset] - mobile srcset
+  @param {string} [alt] - image alt text
+  @param {string} [pos_sm] - object-position below 768px
+  @param {string} [pos_md] - object-position 768–1023px (defaults to pos_sm)
+  @param {string} [pos_lg] - object-position from 1024px
+  @param {string} [overline]
+  @param {string} title
+  @param {string} [body]
+  @param {string} [cta_label]
+  @param {string} [cta_url]
+  @param {number} index - zero-based slide index
+  @param {number} count - number of slides
+  @param {boolean} [eager] - first slide: load eagerly with high priority
+{%- enddoc -%}
+{%- if part == 'media' -%}
+  {%- liquid
+    assign style = ''
+    if pos_sm != blank
+      assign style = style | append: '--pk-pos-sm:' | append: pos_sm | append: ';'
+    endif
+    if pos_md != blank
+      assign style = style | append: '--pk-pos-md:' | append: pos_md | append: ';'
+    endif
+    if pos_lg != blank
+      assign style = style | append: '--pk-pos-lg:' | append: pos_lg | append: ';'
+    endif
+  -%}
+  <picture class="pk-hero__picture" data-pk-hero-picture>
+    {%- if mobile_image != blank -%}
+      <source media="(max-width: 767px)" srcset="{{ mobile_srcset | default: mobile_image }}" sizes="100vw">
+    {%- endif -%}
+    <img
+      src="{{ image }}"
+      width="{{ width | default: 1800 }}"
+      height="{{ height | default: 2700 }}"
+      {% if srcset != blank %}srcset="{{ srcset }}" sizes="100vw"{% endif %}
+      alt="{{ alt | default: title | escape }}"
+      class="pk-hero__image"
+      style="{{ style }}"
+      {% if eager %}fetchpriority="high" loading="eager"{% else %}loading="lazy"{% endif %}
+      decoding="async"
+      data-testid="hero-image"
+    >
+  </picture>
+{%- else -%}
+  {%- liquid
+    assign safe_cta = false
+    assign external = false
+    assign url = cta_url | strip
+    assign lower = url | downcase
+    assign first1 = url | slice: 0, 1
+    assign first2 = url | slice: 0, 2
+    assign first7 = lower | slice: 0, 7
+    assign first8 = lower | slice: 0, 8
+    if first1 == '/' and first2 != '//'
+      assign safe_cta = true
+      assign external = false
+    elsif first8 == 'https://' or first7 == 'http://'
+      assign safe_cta = true
+      assign external = true
+    endif
+    assign position = index | plus: 1
+  -%}
+  <div class="pk-hero__slide" role="group" aria-roledescription="slide" aria-label="{{ position }} of {{ count }}" data-pk-hero-slide>
+    {%- if overline != blank -%}
+      <p class="pk-hero__overline pk-overline">{{ overline | escape }}</p>
+    {%- endif -%}
+    <h1 class="pk-hero__title pk-heading">{{ title | escape }}</h1>
+    {%- if body != blank -%}
+      <p class="pk-hero__body">{{ body | escape }}</p>
+    {%- endif -%}
+    {%- if cta_label != blank and safe_cta -%}
+      <a
+        href="{{ url | escape }}"
+        class="pk-hero__cta"
+        {% if external %}rel="noopener noreferrer"{% endif %}
+        data-testid="hero-cta-link"
+      >
+        <span class="pk-hero__cta-label">{{ cta_label | escape }}</span>
+        <svg class="pk-hero__cta-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    {%- endif -%}
+  </div>
+{%- endif -%}

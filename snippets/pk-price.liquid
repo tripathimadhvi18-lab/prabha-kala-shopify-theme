@@ -1,0 +1,36 @@
+{%- doc -%}
+  Formats a Shopify money value (in paise) the way the production storefront does:
+  "₹" + Indian digit grouping, rounded to whole rupees (e.g. ₹2,799, ₹1,24,999).
+
+  @param {number} amount - money value in the smallest unit (paise), e.g. product.price
+{%- enddoc -%}
+{%- liquid
+  assign rupees = amount | divided_by: 100.0 | round | append: ''
+  assign len = rupees.size
+  if len > 3
+    assign last3_start = len | minus: 3
+    assign last3 = rupees | slice: last3_start, 3
+    assign rest = rupees | slice: 0, last3_start
+    assign grouped = ''
+    assign rest_len = rest.size
+    assign lead = rest_len | modulo: 2
+    if lead == 1
+      assign grouped = rest | slice: 0, 1
+    endif
+    assign i = lead
+    for step in (1..10)
+      if i >= rest_len
+        break
+      endif
+      assign pair = rest | slice: i, 2
+      if grouped == ''
+        assign grouped = pair
+      else
+        assign grouped = grouped | append: ',' | append: pair
+      endif
+      assign i = i | plus: 2
+    endfor
+    assign rupees = grouped | append: ',' | append: last3
+  endif
+-%}
+₹{{ rupees }}

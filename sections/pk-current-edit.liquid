@@ -1,0 +1,143 @@
+{%- comment -%}
+  Current Edit — the product grid under the hero (production: "The collection / Current Edit").
+  Products come from the collection chosen in the theme editor. With no collection chosen,
+  all products are shown in creation order, which matches the production homepage today
+  without changing any store data.
+{%- endcomment -%}
+
+{{ 'pk-product-card.css' | asset_url | stylesheet_tag }}
+<script type="module" src="{{ 'pk-product-card.js' | asset_url }}"></script>
+
+{%- liquid
+  assign source = section.settings.collection
+  if source == blank
+    assign source = collections.all
+    assign products = source.products | sort: 'created_at'
+  else
+    assign products = source.products
+  endif
+  assign count = section.settings.product_count
+-%}
+
+<section class="pk-current-edit" data-testid="current-edit">
+  <div class="pk-container pk-current-edit__inner">
+    <div class="pk-section-head">
+      <div>
+        {%- if section.settings.overline != blank -%}
+          <p class="pk-overline">{{ section.settings.overline | escape }}</p>
+        {%- endif -%}
+        <h2 class="pk-section-head__title pk-heading">{{ section.settings.heading | escape }}</h2>
+      </div>
+      {%- if section.settings.link_label != blank -%}
+        <a href="{{ source.url | default: routes.all_products_collection_url }}" class="pk-section-head__link pk-focus">
+          {{- section.settings.link_label | escape -}}
+        </a>
+      {%- endif -%}
+    </div>
+
+    {%- if products.size > 0 -%}
+      <div class="pk-current-edit__grid">
+        {%- for product in products limit: count -%}
+          {%- render 'pk-product-card', product: product, eager: false -%}
+        {%- endfor -%}
+      </div>
+    {%- else -%}
+      <p class="pk-current-edit__empty pk-body">New sarees are on their way. Please check back soon.</p>
+    {%- endif -%}
+  </div>
+</section>
+
+{% stylesheet %}
+  .pk-current-edit__inner {
+    padding-block: 3.5rem;
+  }
+
+  .pk-section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
+
+  .pk-section-head .pk-overline {
+    margin: 0;
+  }
+
+  .pk-section-head__title {
+    margin: 0.5rem 0 0;
+    font-size: 1.875rem;
+    color: var(--pk-ink);
+  }
+
+  .pk-section-head__link {
+    padding-bottom: 0.125rem;
+    border-bottom: 1px solid var(--pk-gold-soft);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--pk-maroon);
+  }
+
+  .pk-current-edit__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1rem;
+    row-gap: 2rem;
+  }
+
+  .pk-current-edit__empty {
+    padding-block: 2.5rem;
+    text-align: center;
+  }
+
+  @media (min-width: 768px) {
+    .pk-current-edit__inner {
+      padding-block: 5rem;
+    }
+
+    .pk-section-head__title {
+      font-size: 2.125rem;
+    }
+
+    .pk-current-edit__grid {
+      column-gap: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .pk-current-edit__grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PK Current Edit",
+  "settings": [
+    { "type": "text", "id": "overline", "label": "Overline", "default": "The collection" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Current Edit" },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection",
+      "info": "Leave empty to show all products, oldest first (matches the current homepage)."
+    },
+    {
+      "type": "range",
+      "id": "product_count",
+      "label": "Products to show",
+      "min": 2,
+      "max": 20,
+      "step": 1,
+      "default": 10
+    },
+    { "type": "text", "id": "link_label", "label": "Link label", "default": "View all" }
+  ],
+  "presets": [{ "name": "PK Current Edit" }]
+}
+{% endschema %}
