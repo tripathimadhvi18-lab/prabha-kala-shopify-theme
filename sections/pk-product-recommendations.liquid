@@ -1,0 +1,103 @@
+{%- comment -%}
+  Prabha Kala "You may also like" row under the product page.
+  Uses Shopify's native product recommendations, loaded by pk-product.js from
+  routes.product_recommendations_url (Section Rendering API) when the row nears the viewport.
+  While Shopify returns none (new store, little order data) the row shows other in-stock
+  catalogue sarees instead, same fabric first. Cards are the Phase 2 pk-product-card.
+{%- endcomment -%}
+
+{{ 'pk-product-card.css' | asset_url | stylesheet_tag }}
+{{ 'pk-product.css' | asset_url | stylesheet_tag }}
+<script type="module" src="{{ 'pk-product-card.js' | asset_url }}"></script>
+<script type="module" src="{{ 'pk-product.js' | asset_url }}"></script>
+
+{%- liquid
+  assign product_id = product.id | default: recommendations.product.id
+  assign url = routes.product_recommendations_url | append: '?section_id=' | append: section.id | append: '&product_id=' | append: product_id | append: '&limit=' | append: section.settings.limit | append: '&intent=related'
+-%}
+
+{%- capture heading_block -%}
+  <div class="pk-recs__head">
+    {%- if section.settings.overline != blank -%}
+      <p class="pk-overline">{{ section.settings.overline | escape }}</p>
+    {%- endif -%}
+    <h2 class="pk-recs__title pk-heading">{{ section.settings.heading | escape }}</h2>
+  </div>
+{%- endcapture -%}
+
+<pk-recommendations class="pk-recs" data-url="{{ url }}" data-testid="pdp-recommendations">
+  {%- if recommendations.performed -%}
+    {%- comment -%} Rendered for the Section Rendering API call: Shopify's own recommendations. {%- endcomment -%}
+    {%- if recommendations.products_count > 0 -%}
+      <div class="pk-container pk-recs__inner" data-pk-recs-source="shopify">
+        {{ heading_block }}
+        <ul class="pk-recs__grid">
+          {%- for rec in recommendations.products -%}
+            <li>{%- render 'pk-product-card', product: rec, eager: false, sizes: '(min-width: 1024px) 22vw, 50vw' -%}</li>
+          {%- endfor -%}
+        </ul>
+      </div>
+    {%- endif -%}
+  {%- elsif product -%}
+    {%- comment -%}
+      Rendered with the product page. Until Shopify has enough data to return recommendations,
+      show other in-stock sarees from the catalogue, those with the same custom.fabric first.
+      Replaced by Shopify's recommendations when the API returns any.
+    {%- endcomment -%}
+    {%- liquid
+      assign limit = section.settings.limit
+      assign fabric = product.metafields.custom.fabric.value
+      assign picked = ','
+      assign picked_count = 0
+      if fabric != blank
+        for candidate in collections.all.products
+          if picked_count >= limit
+            break
+          endif
+          if candidate.id != product.id and candidate.available and candidate.metafields.custom.fabric.value == fabric
+            assign picked = picked | append: candidate.id | append: ','
+            assign picked_count = picked_count | plus: 1
+          endif
+        endfor
+      endif
+      for candidate in collections.all.products
+        if picked_count >= limit
+          break
+        endif
+        assign marker = ',' | append: candidate.id | append: ','
+        if candidate.id != product.id and candidate.available
+          unless picked contains marker
+            assign picked = picked | append: candidate.id | append: ','
+            assign picked_count = picked_count | plus: 1
+          endunless
+        endif
+      endfor
+    -%}
+    {%- if picked_count > 0 -%}
+      <div class="pk-container pk-recs__inner" data-pk-recs-source="catalogue">
+        {{ heading_block }}
+        <ul class="pk-recs__grid">
+          {%- for candidate in collections.all.products -%}
+            {%- assign marker = ',' | append: candidate.id | append: ',' -%}
+            {%- if picked contains marker -%}
+              <li>{%- render 'pk-product-card', product: candidate, eager: false, sizes: '(min-width: 1024px) 22vw, 50vw' -%}</li>
+            {%- endif -%}
+          {%- endfor -%}
+        </ul>
+      </div>
+    {%- endif -%}
+  {%- endif -%}
+</pk-recommendations>
+
+{% schema %}
+{
+  "name": "PK Recommendations",
+  "tag": "section",
+  "class": "pk-recs-section",
+  "settings": [
+    { "type": "text", "id": "overline", "label": "Overline", "default": "Keep exploring" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "You may also like" },
+    { "type": "range", "id": "limit", "label": "Products to show", "min": 2, "max": 8, "step": 1, "default": 4 }
+  ]
+}
+{% endschema %}

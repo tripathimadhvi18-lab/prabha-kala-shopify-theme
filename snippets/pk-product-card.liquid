@@ -4,6 +4,7 @@
 
   @param {object} product - Shopify product
   @param {boolean} [eager] - load the image eagerly (above the fold)
+  @param {string} [sizes] - image sizes hint (defaults to the homepage grid: 5 columns from 1024px)
 {%- enddoc -%}
 {%- liquid
   assign variant = product.selected_or_first_available_variant
@@ -49,7 +50,7 @@
   else
     assign loading = 'lazy'
   endif
-  assign sizes = '(min-width: 1024px) 20vw, 50vw'
+  assign sizes = sizes | default: '(min-width: 1024px) 20vw, 50vw'
 -%}
 
 <article class="pk-card" data-testid="product-card-{{ product.handle }}">

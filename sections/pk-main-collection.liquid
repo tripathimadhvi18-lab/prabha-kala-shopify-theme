@@ -1,0 +1,379 @@
+{%- comment -%}
+  Prabha Kala collection page (Phase 4A).
+
+  - Products, filters, counts and sorting all come from Shopify: collection.filters
+    (Search & Discovery), collection.sort_options and paginate. Nothing is hard-coded,
+    so filters appear and disappear as they are configured in Search & Discovery.
+  - Filtering is a plain GET form using Shopify's own filter.* / sort_by parameters, so it
+    works without JavaScript. pk-collection.js enhances it: results refresh in place via the
+    Section Rendering API, and below 1024px the filters open in a side panel.
+  - Cards are the Phase 2 pk-product-card (real price, compare-at price, stock and fabric only).
+{%- endcomment -%}
+
+{{ 'pk-product-card.css' | asset_url | stylesheet_tag }}
+{{ 'pk-collection.css' | asset_url | stylesheet_tag }}
+<script type="module" src="{{ 'pk-product-card.js' | asset_url }}"></script>
+<script type="module" src="{{ 'pk-collection.js' | asset_url }}"></script>
+<script type="module">
+  import '@theme/view-event-elements';
+</script>
+
+{%- liquid
+  assign sort_by = collection.sort_by | default: collection.default_sort_by
+  assign title = collection.title
+  if collection.handle == 'all' and section.settings.all_title != blank
+    assign title = section.settings.all_title
+  endif
+
+  assign active_count = 0
+  for filter in collection.filters
+    if filter.type == 'price_range'
+      if filter.min_value.value != null or filter.max_value.value != null
+        assign active_count = active_count | plus: 1
+      endif
+    else
+      assign active_count = active_count | plus: filter.active_values.size
+    endif
+  endfor
+
+  assign clear_url = collection.url | append: '?sort_by=' | append: sort_by
+  assign form_id = 'PkFacets-' | append: section.id
+  assign per_page = section.settings.products_per_page
+-%}
+
+{% # theme-check-disable-next-line UnknownFilter %}
+<collection-component view-event-payload="{{ collection | standard_event_data: 'view' | escape }}">
+<pk-collection
+  class="pk-collection"
+  data-section-id="{{ section.id }}"
+  data-testid="pk-collection"
+>
+  <div class="pk-container">
+    <nav class="pk-collection__crumbs" aria-label="Breadcrumb">
+      <a href="{{ routes.root_url }}" class="pk-focus">Home</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">{{ title | escape }}</span>
+    </nav>
+
+    <header class="pk-collection__header">
+      {%- if section.settings.overline != blank -%}
+        <p class="pk-overline">{{ section.settings.overline | escape }}</p>
+      {%- endif -%}
+      <h1 class="pk-collection__title pk-heading" data-testid="collection-title">{{ title | escape }}</h1>
+      {%- if collection.description != blank -%}
+        <div class="pk-collection__description pk-body">{{ collection.description }}</div>
+      {%- endif -%}
+      <div class="pk-collection__rule" aria-hidden="true"></div>
+    </header>
+
+    {%- paginate collection.products by per_page -%}
+      <div class="pk-collection__layout">
+        {%- comment -%} Filters: sidebar from 1024px, side panel below. {%- endcomment -%}
+        <div class="pk-filters__backdrop" data-pk-filters-close hidden></div>
+        <aside
+          class="pk-filters"
+          id="PkFilters-{{ section.id }}"
+          aria-label="Filters"
+          data-pk-filters
+          tabindex="-1"
+        >
+          <div class="pk-filters__head">
+            <p class="pk-filters__heading pk-heading">Filters</p>
+            <button type="button" class="pk-filters__close pk-focus" data-pk-filters-close aria-label="Close filters">
+              {%- render 'pk-icon', name: 'close' -%}
+            </button>
+          </div>
+
+          <form id="{{ form_id }}" class="pk-filters__form" action="{{ collection.url }}" method="get" data-pk-facets-form>
+            {%- unless section.settings.enable_sorting -%}
+              <input type="hidden" name="sort_by" value="{{ sort_by }}">
+            {%- endunless -%}
+
+            <div class="pk-filters__groups" data-pk-filter-groups>
+              {%- if active_count > 0 -%}
+                <a href="{{ clear_url }}" class="pk-filters__clear pk-focus" data-pk-link data-testid="filter-clear-all">
+                  {%- render 'pk-icon', name: 'close', class: 'pk-filters__clear-icon' -%}
+                  Clear all ({{ active_count }})
+                </a>
+              {%- endif -%}
+
+              {%- for filter in collection.filters -%}
+                {%- assign group_id = section.id | append: '-' | append: filter.param_name | handle -%}
+                {%- case filter.type -%}
+                  {%- when 'list', 'boolean' -%}
+                    {%- if filter.values.size > 0 -%}
+                      <details class="pk-filter" open data-pk-filter="{{ filter.param_name }}" data-testid="filter-group-{{ filter.label | handle }}">
+                        <summary class="pk-filter__summary pk-focus">
+                          <span class="pk-overline">{{ filter.label | escape }}</span>
+                          {%- if filter.active_values.size > 0 -%}
+                            <span class="pk-filter__active-count">{{ filter.active_values.size }}</span>
+                          {%- endif -%}
+                          {%- render 'pk-icon', name: 'chevron-down', class: 'pk-filter__chevron' -%}
+                        </summary>
+                        <fieldset class="pk-filter__options">
+                          <legend class="pk-visually-hidden">{{ filter.label | escape }}</legend>
+                          {%- for value in filter.values -%}
+                            {%- liquid
+                              assign input_id = group_id | append: '-' | append: forloop.index
+                              assign is_disabled = false
+                              if value.count == 0 and value.active == false
+                                assign is_disabled = true
+                              endif
+                            -%}
+                            <label class="pk-check{% if is_disabled %} pk-check--disabled{% endif %}" for="{{ input_id }}">
+                              <input
+                                type="checkbox"
+                                class="pk-check__input"
+                                id="{{ input_id }}"
+                                name="{{ value.param_name }}"
+                                value="{{ value.value | escape }}"
+                                {% if value.active %}checked{% endif %}
+                                {% if is_disabled %}disabled{% endif %}
+                                data-testid="filter-{{ filter.label | handle }}-{{ value.label | handle }}"
+                              >
+                              <span class="pk-check__box" aria-hidden="true"></span>
+                              <span class="pk-check__label">{{ value.label | escape }}</span>
+                              <span class="pk-check__count">({{ value.count }})</span>
+                            </label>
+                          {%- endfor -%}
+                        </fieldset>
+                      </details>
+                    {%- endif -%}
+
+                  {%- when 'price_range' -%}
+                    {%- liquid
+                      assign range_max = filter.range_max | divided_by: 100.0 | ceil
+                      assign min_value = ''
+                      assign max_value = ''
+                      if filter.min_value.value != null
+                        assign min_value = filter.min_value.value | divided_by: 100.0 | round
+                      endif
+                      if filter.max_value.value != null
+                        assign max_value = filter.max_value.value | divided_by: 100.0 | round
+                      endif
+                    -%}
+                    <details class="pk-filter" open data-pk-filter="{{ filter.param_name }}" data-testid="filter-group-price">
+                      <summary class="pk-filter__summary pk-focus">
+                        <span class="pk-overline">{{ filter.label | escape }}</span>
+                        {%- if min_value != '' or max_value != '' -%}
+                          <span class="pk-filter__active-count">1</span>
+                        {%- endif -%}
+                        {%- render 'pk-icon', name: 'chevron-down', class: 'pk-filter__chevron' -%}
+                      </summary>
+                      <fieldset class="pk-filter__options pk-price-range" data-pk-price-range>
+                        <legend class="pk-visually-hidden">{{ filter.label | escape }} in rupees</legend>
+                        <label class="pk-price-range__field" for="{{ group_id }}-min">
+                          <span class="pk-price-range__label">From ₹</span>
+                          <input
+                            type="number"
+                            inputmode="numeric"
+                            class="pk-price-range__input"
+                            id="{{ group_id }}-min"
+                            name="{{ filter.min_value.param_name }}"
+                            value="{{ min_value }}"
+                            min="0"
+                            max="{{ range_max }}"
+                            step="1"
+                            placeholder="0"
+                            data-testid="filter-price-min"
+                          >
+                        </label>
+                        <label class="pk-price-range__field" for="{{ group_id }}-max">
+                          <span class="pk-price-range__label">To ₹</span>
+                          <input
+                            type="number"
+                            inputmode="numeric"
+                            class="pk-price-range__input"
+                            id="{{ group_id }}-max"
+                            name="{{ filter.max_value.param_name }}"
+                            value="{{ max_value }}"
+                            min="0"
+                            max="{{ range_max }}"
+                            step="1"
+                            placeholder="{{ range_max }}"
+                            data-testid="filter-price-max"
+                          >
+                        </label>
+                        <p class="pk-price-range__hint">Highest price: {% render 'pk-price', amount: filter.range_max %}</p>
+                      </fieldset>
+                    </details>
+                {%- endcase -%}
+              {%- endfor -%}
+            </div>
+
+            <noscript>
+              <button type="submit" class="pk-button pk-button--primary pk-filters__apply-noscript">Apply filters</button>
+            </noscript>
+          </form>
+
+          <div class="pk-filters__foot">
+            <a href="{{ clear_url }}" class="pk-button pk-button--secondary pk-filters__foot-clear" data-pk-link>Clear all</a>
+            <button type="button" class="pk-button pk-button--primary pk-filters__foot-show" data-pk-filters-close data-testid="mobile-filter-apply">
+              Show <span data-pk-count-inline>{{ collection.products_count }}</span>
+            </button>
+          </div>
+        </aside>
+
+        <div class="pk-collection__results" data-pk-results>
+          <div class="pk-collection__toolbar">
+            <p class="pk-collection__count" data-testid="collection-count" role="status">
+              {{ collection.products_count }}
+              {% if collection.products_count == 1 %}saree{% else %}sarees{% endif %}
+            </p>
+            <div class="pk-collection__controls">
+              <button
+                type="button"
+                class="pk-collection__filter-toggle pk-focus"
+                data-pk-filters-open
+                aria-controls="PkFilters-{{ section.id }}"
+                aria-expanded="false"
+                data-testid="mobile-filter-trigger"
+              >
+                {%- render 'pk-icon', name: 'sliders' -%}
+                <span>Filters{% if active_count > 0 %} ({{ active_count }}){% endif %}</span>
+              </button>
+              {%- if section.settings.enable_sorting and collection.sort_options.size > 0 -%}
+                <label class="pk-sort" for="PkSort-{{ section.id }}">
+                  <span class="pk-visually-hidden">Sort by</span>
+                  <select
+                    id="PkSort-{{ section.id }}"
+                    class="pk-sort__select pk-focus"
+                    name="sort_by"
+                    form="{{ form_id }}"
+                    data-pk-sort
+                    data-testid="sort-select"
+                  >
+                    {%- for option in collection.sort_options -%}
+                      <option value="{{ option.value }}" {% if option.value == sort_by %}selected{% endif %}>
+                        {{- option.name | escape -}}
+                      </option>
+                    {%- endfor -%}
+                  </select>
+                  {%- render 'pk-icon', name: 'chevron-down', class: 'pk-sort__chevron' -%}
+                </label>
+              {%- endif -%}
+            </div>
+          </div>
+
+          {%- if active_count > 0 -%}
+            <ul class="pk-collection__chips" aria-label="Active filters">
+              {%- for filter in collection.filters -%}
+                {%- if filter.type == 'price_range' -%}
+                  {%- if filter.min_value.value != null or filter.max_value.value != null -%}
+                    <li>
+                      <a href="{{ filter.url_to_remove }}" class="pk-chip pk-focus" data-pk-link>
+                        <span>
+                          {{- filter.label | escape }}:
+                          {% if filter.min_value.value != null %}{% render 'pk-price', amount: filter.min_value.value %}{% else %}₹0{% endif %}
+                          –
+                          {% if filter.max_value.value != null %}{% render 'pk-price', amount: filter.max_value.value %}{% else %}{% render 'pk-price', amount: filter.range_max %}{% endif -%}
+                        </span>
+                        {%- render 'pk-icon', name: 'close', class: 'pk-chip__icon' -%}
+                        <span class="pk-visually-hidden">Remove filter</span>
+                      </a>
+                    </li>
+                  {%- endif -%}
+                {%- else -%}
+                  {%- for value in filter.active_values -%}
+                    <li>
+                      <a href="{{ value.url_to_remove }}" class="pk-chip pk-focus" data-pk-link>
+                        <span>{{ filter.label | escape }}: {{ value.label | escape }}</span>
+                        {%- render 'pk-icon', name: 'close', class: 'pk-chip__icon' -%}
+                        <span class="pk-visually-hidden">Remove filter</span>
+                      </a>
+                    </li>
+                  {%- endfor -%}
+                {%- endif -%}
+              {%- endfor -%}
+            </ul>
+          {%- endif -%}
+
+          {%- if collection.products.size > 0 -%}
+            <ul class="pk-collection__grid" id="PkGrid-{{ section.id }}" data-testid="collection-grid">
+              {%- for product in collection.products -%}
+                <li class="pk-collection__item">
+                  {%- liquid
+                    assign eager = false
+                    if paginate.current_page == 1 and forloop.index <= 2
+                      assign eager = true
+                    endif
+                  -%}
+                  {%- render 'pk-product-card',
+                    product: product,
+                    eager: eager,
+                    sizes: '(min-width: 1024px) 26vw, 50vw'
+                  -%}
+                </li>
+              {%- endfor -%}
+            </ul>
+          {%- elsif active_count > 0 -%}
+            <div class="pk-collection__empty" data-testid="collection-empty">
+              <p class="pk-heading pk-collection__empty-title">No sarees match these filters</p>
+              <p class="pk-body">Try removing a filter to see more of the collection.</p>
+              <a href="{{ clear_url }}" class="pk-button pk-button--secondary" data-pk-link data-testid="collection-empty-clear">Clear all filters</a>
+            </div>
+          {%- else -%}
+            <div class="pk-collection__empty" data-testid="collection-empty">
+              <p class="pk-heading pk-collection__empty-title">New sarees are on their way</p>
+              <p class="pk-body">Please check back soon.</p>
+              <a href="{{ routes.all_products_collection_url }}" class="pk-button pk-button--secondary">Browse all sarees</a>
+            </div>
+          {%- endif -%}
+
+          {%- if paginate.pages > 1 -%}
+            <nav class="pk-pagination" aria-label="Pagination" data-testid="pagination">
+              {%- if paginate.previous -%}
+                <a href="{{ paginate.previous.url }}" class="pk-pagination__step pk-focus" data-pk-link aria-label="Previous page">
+                  {%- render 'pk-icon', name: 'chevron-left' -%}
+                </a>
+              {%- endif -%}
+              {%- for part in paginate.parts -%}
+                {%- if part.is_link -%}
+                  <a href="{{ part.url }}" class="pk-pagination__page pk-focus" data-pk-link aria-label="Page {{ part.title }}">{{ part.title }}</a>
+                {%- elsif part.title == paginate.current_page -%}
+                  <span class="pk-pagination__page pk-pagination__page--current" aria-current="page">{{ part.title }}</span>
+                {%- else -%}
+                  <span class="pk-pagination__gap">{{ part.title }}</span>
+                {%- endif -%}
+              {%- endfor -%}
+              {%- if paginate.next -%}
+                <a href="{{ paginate.next.url }}" class="pk-pagination__step pk-focus" data-pk-link aria-label="Next page">
+                  {%- render 'pk-icon', name: 'chevron-right' -%}
+                </a>
+              {%- endif -%}
+            </nav>
+          {%- endif -%}
+        </div>
+      </div>
+    {%- endpaginate -%}
+  </div>
+</pk-collection>
+</collection-component>
+
+{% schema %}
+{
+  "name": "PK Collection",
+  "tag": "section",
+  "class": "pk-collection-section",
+  "settings": [
+    { "type": "text", "id": "overline", "label": "Overline", "default": "Collection" },
+    {
+      "type": "text",
+      "id": "all_title",
+      "label": "Heading for the all-products page",
+      "info": "Shopify names /collections/all \"Products\". This replaces that name on that page only.",
+      "default": "All sarees"
+    },
+    {
+      "type": "range",
+      "id": "products_per_page",
+      "label": "Products per page",
+      "min": 12,
+      "max": 48,
+      "step": 3,
+      "default": 24
+    },
+    { "type": "checkbox", "id": "enable_sorting", "label": "Show sorting", "default": true }
+  ]
+}
+{% endschema %}

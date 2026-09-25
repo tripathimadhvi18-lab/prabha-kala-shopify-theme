@@ -1,7 +1,7 @@
 {%- doc -%}
   Prabha Kala outline icons (same shapes as the production storefront's lucide icons).
 
-  @param {string} name - menu | close | search | heart | bag | arrow-up-right
+  @param {string} name - menu | close | search | heart | bag | arrow-up-right | sliders | chevron-down | chevron-left | chevron-right
   @param {string} [class] - extra classes
 {%- enddoc -%}
 {%- liquid
@@ -35,5 +35,13 @@
       <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
     {%- when 'arrow-up-right' -%}
       <path d="M7 17 17 7M7 7h10v10"/>
+    {%- when 'sliders' -%}
+      <path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/>
+    {%- when 'chevron-down' -%}
+      <path d="m6 9 6 6 6-6"/>
+    {%- when 'chevron-left' -%}
+      <path d="m15 18-6-6 6-6"/>
+    {%- when 'chevron-right' -%}
+      <path d="m9 18 6-6-6-6"/>
   {%- endcase -%}
 </svg>
